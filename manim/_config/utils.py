@@ -280,6 +280,7 @@ class ManimConfig(MutableMapping):
         "save_pngs",
         "scene_names",
         "show_in_file_browser",
+        "slideshow",
         "sound",
         "tex_dir",
         "tex_template_file",
@@ -508,6 +509,7 @@ class ManimConfig(MutableMapping):
             "flush_cache",
             "custom_folders",
             "use_js_renderer",
+            "slideshow"
         ]:
             setattr(self, key, parser["CLI"].getboolean(key, fallback=False))
 
@@ -613,6 +615,7 @@ class ManimConfig(MutableMapping):
             "verbosity",
             "background_color",
             "use_js_renderer",
+            "slideshow"
         ]:
             if hasattr(args, key):
                 attr = getattr(args, key)
@@ -1016,6 +1019,17 @@ class ManimConfig(MutableMapping):
                 "individually. (write_to_movie, write_all, "
                 "save_last_frame, save_pngs, or save_as_gif)"
             )
+
+    @property
+    def slideshow(self):
+        """Whether to use JS renderer or not (default)."""
+        return self._d["slideshow"]
+
+    @slideshow.setter
+    def slideshow(self, x):
+        self._d["slideshow"] = x
+        if x:
+            self._d["progress_bar"] = False
 
     @property
     def use_js_renderer(self):

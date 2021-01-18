@@ -17,6 +17,11 @@ try:
 except ImportError:
     frame_server_impl = None
 
+try:
+    from manim.slides.main import main as slide_main
+except ImportError:
+    slide_main = None
+
 
 def open_file_if_needed(file_writer):
     if config["verbosity"] != "DEBUG":
@@ -84,6 +89,15 @@ def main():
                 server = frame_server_impl.get(input_file)
                 server.start()
                 server.wait_for_termination()
+            except Exception:
+                print("\n\n")
+                traceback.print_exc()
+                print("\n\n")
+        elif config["slideshow"]:
+            try:
+                if slide_main is None:
+                    raise ImportError("Dependencies for slideshow renderer are not installed.")
+                slide_main()
             except Exception:
                 print("\n\n")
                 traceback.print_exc()

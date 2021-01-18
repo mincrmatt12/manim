@@ -408,6 +408,13 @@ def _parse_args_no_subcmd(args: list) -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--slideshow",
+        help="Render a live slideshow",
+        action="store_const",
+        const=True,
+    )
+
+    parser.add_argument(
         "--use_js_renderer",
         help="Render animations using the javascript frontend",
         action="store_const",

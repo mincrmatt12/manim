@@ -63,6 +63,12 @@ try:
     from .scene.js_scene import *
 except ModuleNotFoundError:
     pass  # optional deps
+
+try:
+    from .scene.slide_scene import *
+except ModuleNotFoundError:
+    pass  # optional deps
+
 from .scene.scene import *
 from .scene.sample_space_scene import *
 from .scene.three_d_scene import *
