@@ -8,7 +8,9 @@ from ..scene.slide_scene import PresentationState
 import sdl2
 import sdl2.ext
 
-FULLSCREEN = True  # when i can be bothered to figure out the cfg system i'll replace this
+import numpy as np
+
+FULLSCREEN = False  # when i can be bothered to figure out the cfg system i'll replace this
 
 class SlideshowEvent(enum.Enum):
     EXIT = 0
@@ -32,10 +34,14 @@ class SlideshowHost:
         # create a sdl window
         self.window = sdl2.ext.Window("manim", size=(config.pixel_width, config.pixel_height), flags=sdl2.SDL_WINDOW_FULLSCREEN if FULLSCREEN else None)
 
-        self.window_surface = sdl2.SDL_CreateRGBSurfaceWithFormat(0, config.pixel_width, config.pixel_height, 24, sdl2.SDL_PIXELFORMAT_BGR888)
+        self.window_surface = sdl2.SDL_CreateRGBSurfaceWithFormat(0, config.pixel_width, config.pixel_height, 32, sdl2.SDL_PIXELFORMAT_ABGR8888)
         self.window_surface_data = sdl2.ext.pixels3d(self.window_surface.contents, transpose=False)
 
         self.window_real_surface = sdl2.SDL_GetWindowSurface(self.window.window)
+        sdl2.SDL_SetSurfaceBlendMode(self.window_real_surface, sdl2.SDL_BLENDMODE_NONE)
+        sdl2.SDL_SetSurfaceBlendMode(self.window_surface, sdl2.SDL_BLENDMODE_NONE)
+
+        self.avg_fps = 1.0
 
     def __del__(self):
         if self.window_surface is not None:
@@ -68,14 +74,16 @@ class SlideshowHost:
 
         current_time = time.time()
         last = self.last_frame_at
-        self.last_frame_at = current_time
 
-        if self.active_scene.presentation_state == PresentationState.IDLE:
-            sdl2.SDL_Delay(16)
-        else:
-            sdl2.SDL_Delay(1)
+        self.avg_fps = 0.1 * self.avg_fps + 0.9 * (1 / (current_time - last))
+        logger.debug("fps: " + str(self.avg_fps))
 
-        return current_time - last
+        if current_time - last < (1 / config.frame_rate):
+            off = (1 / config.frame_rate) - (current_time - last)
+            sdl2.SDL_Delay(int(off * 1000))
+
+        self.last_frame_at = time.time()
+        return self.last_frame_at - last
 
     def update_with_rendered_frame(self, slide_source, frame_data):
         """
@@ -115,7 +123,7 @@ class SlideshowHost:
         self.last_frame_data = None
 
     def send_frame_to_window(self, frame):
-        self.window_surface_data[:, :, 0:3] = frame[:, :, 0:3]
+        np.copyto(self.window_surface_data, frame)
         sdl2.SDL_BlitSurface(self.window_surface, None, self.window_real_surface, None)
         self.window.refresh()
 
